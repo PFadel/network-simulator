@@ -1,4 +1,9 @@
 import socket
+import sys
+
+MAX_DATAGRAM_BITS = 65535 * 8
+HEADER_SIZE = 160
+MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
 
 def listen_socket(socket):
@@ -8,7 +13,7 @@ def listen_socket(socket):
         data = conn.recv(1024).decode()
         if not data:
             break
-        print("Dados recebidos: " + readIPV4(data))
+        print("Dados recebidos: {}".format(readIPV4(data)))
 
 
 def connect_to_neighboor(address):
@@ -21,26 +26,26 @@ def connect_to_neighboor(address):
         print('Entre com a mensagem que deseja enviar')
         message = input()
         print('Enviando {}'.format(message))
-        connecting.sendall(
-            bytearray(createIPV4('127.0.0.1', message), 'utf-8'))
+        send_message(connecting, message)
 
     finally:
         print('closing connection')
         connecting.close()
 
 
+def send_message(socket, message):
+    for datagram in createIPV4(socket.getsockname()[0], message):
+        socket.sendall(bytearray(datagram, 'utf-8'))
+
+
 # Cria o cabeçalho IPV4
 def createIPV4(orig, payload):
     # ipv4 = 4
-    version = binary_ip('4',4)
+    version = binary_ip('4', 4)
     # 5 é o protocolo sem a parte de options
-    ihl = binary_ip('5',4)
+    ihl = binary_ip('5', 4)
     # requerido pelo professor
     typeOfService = binary_ip('0', 8)
-    # 16 bits. tamanho do cabeçalho + carga útil   ------------------------------------------------
-    totalLenght = binary_ip('0', 16)
-    # 16 bits. Identificador utilizado em caso de fragmentação -------------------------------
-    identification = binary_ip('0', 16)
     # requerido pelo professor
     flags = binary_ip('0', 3)
     # requerido pelo professor
@@ -58,91 +63,93 @@ def createIPV4(orig, payload):
     sourceIpAddress = sourceIpAddress + binary_ip(aux[1], 8)
     sourceIpAddress = sourceIpAddress + binary_ip(aux[2], 8)
     sourceIpAddress = sourceIpAddress + binary_ip(aux[3], 8)
-    # professor falou que só vamos utilizar na ultima versão             -------------------------------------------
+    # professor falou que só vamos utilizar na ultima versão
     destinationIpAddress = binary_ip('0', 32)
-    return version +\
-        ihl +\
-        typeOfService +\
-        totalLenght +\
-        identification +\
-        flags +\
-        fragmentOffset +\
-        timeToLive +\
-        protocol +\
-        headerChecksum +\
-        sourceIpAddress +\
-        destinationIpAddress +\
-        payload
+
+    finish = False
+    frag = 0
+    resp_list = []
+    fragment_payload = payload
+    while not finish:
+        if sys.getsizeof(fragment_payload) > MAX_PAYLOAD:
+            fragment_payload = payload[frag * MAX_PAYLOAD:
+                                       frag * (MAX_PAYLOAD + 1)]
+        else:
+            finish = True
+
+        # 16 bits. Identificador utilizado em caso de fragmentação
+        identification = binary_ip(str(frag), 16)
+
+        # 16 bits. tamanho do cabeçalho + carga útil
+        totalLenght = binary_ip(str(160 + sys.getsizeof(fragment_payload)), 16)
+
+        resp_list.append(
+            version + ihl + typeOfService + totalLenght + identification +
+            flags + fragmentOffset + timeToLive + protocol + headerChecksum +
+            sourceIpAddress + destinationIpAddress + fragment_payload)
+
+        frag += 1
+
+    return resp_list
+
 
 def readIPV4(datagram):
-    #print("RECEBI UM DATAGRAMA DE LEN {}".format(len(datagram)))
-    #print("datagrama" + datagram)
-    # ipv4 = 4
     version = int(datagram[:4], 2)
-    #print("A" + version)
-    # 5 é o protocolo sem a parte de options
-    ihl = int(datagram[4:8],2)
-    #print("B" + ihl) 
- # requerido pelo professor
-    typeOfService = int(datagram[8:16],2)
-    #print("C" + typeOfService) 
- # 16 bits. tamanho do cabeçalho + carga útil
-    totalLenght = int(datagram[16:32],2)
-    #print("D" + totalLenght)
-	# 16 bits. Identificador utilizado em caso de fragmentação
-    identification = int(datagram[32:48],2)
-    #print("E" + identification)
-    # requerido pelo professor
-    flags = int(datagram[48:51],2)
-    #print("F" + flags)
-	# requerido pelo professor
-    fragmentOffset = int(datagram[51:64],2)
-    #print("G" + fragmentOffset)
-	# requerido pelo professor
-    timeToLive = int(datagram[64:72],2)
-    #print("H" + timeToLive)
-	# tcp = 6. Professor requeriu 0
-    protocol = int(datagram[72:80],2)
-    #print("I" + protocol)
-    # requerido pelo professor
-    headerChecksum = int(datagram[80:96],2)
-    #print("J" + headerChecksum)    
-    #print("gabiru" + datagram[96:128])
+
+    ihl = int(datagram[4:8], 2)
+
+    typeOfService = int(datagram[8:16], 2)
+
+    totalLenght = int(datagram[16:32], 2)
+
+    identification = int(datagram[32:48], 2)
+
+    flags = int(datagram[48:51], 2)
+
+    fragmentOffset = int(datagram[51:64], 2)
+
+    timeToLive = int(datagram[64:72], 2)
+
+    protocol = int(datagram[72:80], 2)
+
+    headerChecksum = int(datagram[80:96], 2)
+
     sourceIpAddress = decimal_ip(datagram[96:128])
-    #print("K" + sourceIpAddress)    
-	# professor falou que só vamos utilizar na ultima versão
+
     destinationIpAddress = decimal_ip(datagram[128:160])
-    #print("L" + destinationIpAddress)
+
     payload = str(datagram[160:])
-    return str(version) +\
-        str(ihl) +\
-        str(typeOfService) +\
-        str(totalLenght) +\
-        str(identification) +\
-        str(flags) +\
-        str(fragmentOffset) +\
-        str(timeToLive) +\
-        str(protocol) +\
-        str(headerChecksum) +\
-        sourceIpAddress +\
-        destinationIpAddress +\
-        payload
-    #return payload
+
+    answer_dict = {
+        'version': str(version),
+        'ihl': str(ihl),
+        'typeOfService': str(typeOfService),
+        'totalLenght': str(totalLenght),
+        'identification': str(identification),
+        'flags': str(flags),
+        'fragmentOffset': str(fragmentOffset),
+        'timeToLive': str(timeToLive),
+        'protocol': str(protocol),
+        'headerChecksum': str(headerChecksum),
+        'sourceIpAddress': sourceIpAddress,
+        'destinationIpAddress': destinationIpAddress,
+        'payload': payload
+    }
+
+    return answer_dict
 
 
 # Transforma o IP de binário para decimal
 def decimal_ip(ip):
-    #print("Recebi" + ip)
     k = 0
     resp = ''
-    for i in range(1,5):
+    for i in range(1, 5):
         aux = 0
-        for j in range(7,-1, -1):
+        for j in range(7, -1, -1):
             aux = aux + (2 ** j) * int(ip[k])
-            k= k+1
+            k = k + 1
         resp = resp + str(aux) + '.'
-    return resp[0:len(resp)-1]
-		#print("Retornarei" + resp[0:len(resp)-1])
+    return resp[0:len(resp) - 1]
 
 
 # Transforma em binario e completa com 0, para dar o tamanho necessario de bits
