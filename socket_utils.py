@@ -8,7 +8,7 @@ MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
 def listen_socket(socket):
     conn, addr = socket.accept()
-    print("Connection from: " + str(addr))
+    print("Conexao recebida de: {}".format(str(addr)))
     while True:
         data = conn.recv(1024).decode()
         if not data:
@@ -29,7 +29,7 @@ def connect_to_neighboor(address):
         send_message(connecting, message)
 
     finally:
-        print('closing connection')
+        print('Fechando conexão')
         connecting.close()
 
 

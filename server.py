@@ -5,10 +5,11 @@ import _thread
 
 # Parameters
 parser = argparse.ArgumentParser()
-parser.add_argument("-p", "--port", help="aplication desired port", type=int)
-parser.add_argument("neighbors", help="path to neighbors file")
-parser.add_argument("IPs", help="path to IPs file")
-parser.add_argument("Routing", help="path to Routing file")
+parser.add_argument("-p", "--port", help="Porta desejada da aplicacao",
+                    type=int)
+parser.add_argument("neighbors", help="Caminho para o arquivo de vizinhos")
+parser.add_argument("IPs", help="Caminho para o arquivo de IPs virtuais")
+parser.add_argument("Routing", help="Caminho para o arquivo de Roteamento")
 args = parser.parse_args()
 
 port = args.port if args.port is not None else 10000
@@ -43,7 +44,7 @@ else:
 
     # Bind the socket to the port
     server_address = ('', port)
-    print('starting up on {}'.format(server_address))
+    print('Iniciando bind em: {}'.format(server_address))
     listening.bind(server_address)
 
     listening.listen(1)
@@ -54,7 +55,7 @@ else:
         print('Com qual vizinho se deseja conectar ?')
         for i, n in enumerate(neighbors):
             print('[{}] {}'.format(i, n))
-        print('[{}] Terminar execução'.format(max_value_neig + 1))
+        print('[{}] Terminar execucao'.format(max_value_neig + 1))
         try:
             chosen = int(input())
         except ValueError:
@@ -69,4 +70,5 @@ else:
         else:
             address = neighbors[chosen].split(' ')
             socket_utils.connect_to_neighboor(address)
-print('Execution finished')
+
+print('Execucao terminada')
