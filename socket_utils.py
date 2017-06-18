@@ -159,3 +159,25 @@ def binary_ip(value, length):
     for a in range(0, length - len(answer)):
         zeros = '0' + zeros
     return zeros + answer
+
+# Valida a máscara da sub rede
+def validaMascara(address, classe):
+    if classe == 'A':
+        size = 1
+    elif classe == 'B':
+        size = 2
+    else:
+        size = 3
+    for j in range (0, size):
+        if address.split('.')[j] != '255' and address.split('.')[j] != '0':
+            return False
+    return True
+
+# Verifica a classe do endereço
+def checkClass(address):
+    if int(address.split('.')[0]) >= 0 and int(address.split('.')[0]) < 127:
+        return 'A'
+    elif int(address.split('.')[0]) > 127 and int(address.split('.')[0]) < 192:
+        return 'B'
+    else:
+        return 'C'
