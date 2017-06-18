@@ -6,6 +6,14 @@ HEADER_SIZE = 160
 MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
 
+def find_socket_to_use(neighbors, IPs, routing, route):
+    for req in routing:
+        if req.startswith(route):
+            print("Rota escolhida: {}".format(req))
+            next_jump = int(req.split(' ')[2])
+            return neighbors[next_jump].split(' ')
+
+
 def listen_socket(socket):
     conn, addr = socket.accept()
     print("Conexao recebida de: {}".format(str(addr)))
@@ -16,12 +24,15 @@ def listen_socket(socket):
         print("Dados recebidos: {}".format(readIPV4(data)))
 
 
-def connect_to_neighboor(address):
-    print('Tentando se conectar com vizinho {} {}'.format(address[0],
-                                                          int(address[1])))
-    server_address = (address[0], int(address[1]))
+def route_message(neighbors, IPs, routing, route):
+    conn = find_socket_to_use(neighbors, IPs, routing, route)
+    if conn is None:
+        print("Nenhuma rota encontrada para o destino, abortando envio")
+        return
+    print('Abrindo conexao com: {} {}'.format(conn[0], int(conn[1])))
+    server_route = (conn[0], int(conn[1]))
     connecting = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connecting.connect(server_address)
+    connecting.connect(server_route)
     try:
         print('Entre com a mensagem que deseja enviar')
         message = input()
@@ -29,7 +40,7 @@ def connect_to_neighboor(address):
         send_message(connecting, message)
 
     finally:
-        print('Fechando conexão')
+        print('Fechando conexao')
         connecting.close()
 
 

@@ -28,9 +28,9 @@ def validate_args(neighbors, IPs, routing, args):
 
     if max_value_IPs != max_value_neig or interface_error or mask_error:
         if interface_error:
-            print("Índice da interface não existe.")
+            print("Indice da interface nao existe.")
         elif mask_error:
-            print("Máscara inválida")
+            print("Mascara invalida")
         else:
             print("Quantidade de IPs e de Vizinhos deve ser igual")
         return False
