@@ -25,6 +25,8 @@ def find_socket_to_use(routing, route):
             if req[i] != c:
                 diffs.append(i)
                 break
+            if len(route) - 1 == i:
+                diffs.append(i)
 
     longest_prefix = diffs[0]
     longest_prefix_index = 0
@@ -49,9 +51,9 @@ def listen_socket(neighbors, socket, routing):
                 break
             dic = readIPV4(data)
             if socket.getsockname()[0] == dic["destinationIpAddress"]:
-                print("Dados recebidos: {}".format(readIPV4(data)))
+                print("Dados recebidos: {}".format(dic["payload"]))
             else:
-                route_message(neighbors, routing, dic["destinationIpAddress"], data)
+                route_message(neighbors, routing, dic["destinationIpAddress"], data[HEADER_SIZE:])
                 break
 
 
@@ -75,15 +77,15 @@ def route_message(neighbors, routing, route, message=None):
             print('Entre com a mensagem que deseja enviar')
             message = input()
         print('Enviando {}'.format(message))
-        send_message(connecting, message)
+        send_message(connecting, route, message)
 
     finally:
         print('Fechando conexao')
         connecting.close()
 
 
-def send_message(socket, message):
-    for datagram in createIPV4(socket.getsockname()[0],socket.getpeername()[0], message):
+def send_message(socket, destination, message):
+    for datagram in createIPV4(socket.getsockname()[0], destination, message):
         socket.sendall(bytearray(datagram, 'utf-8'))
 
 
@@ -118,6 +120,7 @@ def createIPV4(orig, dest, payload):
     destinationIpAddress = destinationIpAddress + binary_ip(aux[1], 8)
     destinationIpAddress = destinationIpAddress + binary_ip(aux[2], 8)
     destinationIpAddress = destinationIpAddress + binary_ip(aux[3], 8)
+
     finish = False
     frag = 0
     resp_list = []

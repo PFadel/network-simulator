@@ -22,7 +22,7 @@ def main(neighbors, IPs, routing, port):
 
     while True:
 
-        print('Para qual no da rede se deseja enviar uma mensagem ?')
+        """"print('Para qual no da rede se deseja enviar uma mensagem ?')
 
         for i, n in enumerate(neighbors):
             print('[{}] {}'.format(i, n))
@@ -41,5 +41,19 @@ def main(neighbors, IPs, routing, port):
         else:
             route = neighbors[chosen].split(' ')[0]
             socket_utils.route_message(neighbors, routing, route)
-
+"""
+        option = ''
+        print('Digite 1 para enviar mensagem ou 2 para sair.')
+        try:
+            option = int(input())
+        except ValueError:
+            print('Escolha invalida, deve ser um valor inteiro.')
+        if option == 1:
+            print('Digite o IP de destino:')
+            destination = input()
+            print('Digite a porta:')
+            port = input()
+            socket_utils.route_message(neighbors, routing, destination)
+        elif option == 2:
+            break   
     print('Execucao terminada')
