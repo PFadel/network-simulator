@@ -17,7 +17,7 @@ def main(neighbors, IPs, routing, port):
         listening.bind(server_address)
         listening.listen(1)
         _thread.start_new_thread(socket_utils.listen_socket,
-                                 tuple([listening, ]))
+                                 tuple([neighbors, listening, routing]))
         out_sockets.append(listening)
 
     while True:
@@ -40,6 +40,6 @@ def main(neighbors, IPs, routing, port):
             continue
         else:
             route = neighbors[chosen].split(' ')[0]
-            socket_utils.route_message(neighbors, out_sockets, routing, route)
+            socket_utils.route_message(neighbors, routing, route)
 
     print('Execucao terminada')
