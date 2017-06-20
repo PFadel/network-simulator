@@ -6,22 +6,25 @@ import _thread
 def main(neighbors, IPs, routing, port):
     max_value = len(routing) - 1
     # Create a TCP/IP socket
-    listening = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Bind the socket to the port
-    server_address = ('', port)
-    print('Iniciando bind em: {}'.format(server_address))
-    listening.bind(server_address)
 
-    listening.listen(1)
-
-    while True:
+    out_sockets = []
+    for i in IPs:
+        listening = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_address = (i.split(' ')[0], port)
+        print('Iniciando bind em: {}'.format(server_address))
+        listening.bind(server_address)
+        listening.listen(1)
         _thread.start_new_thread(socket_utils.listen_socket,
                                  tuple([listening, ]))
+        out_sockets.append(listening)
+
+    while True:
 
         print('Para qual no da rede se deseja enviar uma mensagem ?')
 
-        for i, n in enumerate(routing):
+        for i, n in enumerate(neighbors):
             print('[{}] {}'.format(i, n))
         print('[{}] Terminar execucao'.format(max_value + 1))
         try:
@@ -36,7 +39,7 @@ def main(neighbors, IPs, routing, port):
                 max_value))
             continue
         else:
-            route = routing[chosen].split(' ')[0]
-            socket_utils.route_message(neighbors, IPs, routing, route)
+            route = neighbors[chosen].split(' ')[0]
+            socket_utils.route_message(neighbors, out_sockets, routing, route)
 
     print('Execucao terminada')

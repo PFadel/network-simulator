@@ -1,4 +1,3 @@
-import socket
 import sys
 
 MAX_DATAGRAM_BITS = 65535 * 8
@@ -6,12 +5,37 @@ HEADER_SIZE = 160
 MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
 
-def find_socket_to_use(neighbors, IPs, routing, route):
+def find_socket_to_use(routing, route):
+    diffs = []
+
+    all_routes = None
+
+    route = route.split('.')
+    route = binary_ip(route[0], 8) + binary_ip(route[1], 8) + binary_ip(route[2], 8) + binary_ip(route[3], 8)
+
     for req in routing:
-        if req.startswith(route):
-            print("Rota escolhida: {}".format(req))
-            next_jump = int(req.split(' ')[2])
-            return neighbors[next_jump].split(' ')
+        req = req.split(' ')[0].split('.')
+        req = binary_ip(req[0], 8) + binary_ip(req[1], 8) + binary_ip(req[2], 8) + binary_ip(req[3], 8)
+
+        if req == binary_ip('0', 32):
+            all_routes = req
+
+        for i, c in enumerate(route):
+            if req[i] != c:
+                diffs.append(i)
+                break
+
+    longest_prefix = diffs[0]
+    longest_prefix_index = 0
+
+    for i, di in enumerate(diffs):
+        if di > longest_prefix:
+            longest_prefix = di
+            longest_prefix_index = i
+
+    if longest_prefix == 0:
+        return all_routes
+    return routing[longest_prefix_index]
 
 
 def listen_socket(socket):
@@ -24,24 +48,29 @@ def listen_socket(socket):
         print("Dados recebidos: {}".format(readIPV4(data)))
 
 
-def route_message(neighbors, IPs, routing, route):
-    conn = find_socket_to_use(neighbors, IPs, routing, route)
+def route_message(neighbors, out_sockets, routing, route):
+    conn = find_socket_to_use(routing, route)
+
     if conn is None:
         print("Nenhuma rota encontrada para o destino, abortando envio")
         return
-    print('Abrindo conexao com: {} {}'.format(conn[0], int(conn[1])))
-    server_route = (conn[0], int(conn[1]))
-    connecting = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    connecting.connect(server_route)
+
+    conn_index = int(conn.split(' ')[2])
+    chosen_socket = out_sockets[conn_index]
+    neighbor = neighbors[conn_index].split(' ')
+
+    print('Abrindo conexao com: {} {}'.format(neighbor[0], int(neighbor[1])))
+    server_route = (neighbor[0], int(neighbor[1]))
+    chosen_socket.connect(server_route)
     try:
         print('Entre com a mensagem que deseja enviar')
         message = input()
         print('Enviando {}'.format(message))
-        send_message(connecting, message)
+        send_message(chosen_socket, message)
 
     finally:
         print('Fechando conexao')
-        connecting.close()
+        chosen_socket.close()
 
 
 def send_message(socket, message):
