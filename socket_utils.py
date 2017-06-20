@@ -1,3 +1,4 @@
+import socket
 import sys
 
 MAX_DATAGRAM_BITS = 65535 * 8
@@ -39,13 +40,14 @@ def find_socket_to_use(routing, route):
 
 
 def listen_socket(socket):
-    conn, addr = socket.accept()
-    print("Conexao recebida de: {}".format(str(addr)))
     while True:
-        data = conn.recv(1024).decode()
-        if not data:
-            break
-        print("Dados recebidos: {}".format(readIPV4(data)))
+        conn, addr = socket.accept()
+        print("Conexao recebida de: {}".format(str(addr)))
+        while True:
+            data = conn.recv(1024).decode()
+            if not data:
+                break
+            print("Dados recebidos: {}".format(readIPV4(data)))
 
 
 def route_message(neighbors, out_sockets, routing, route):
@@ -56,21 +58,22 @@ def route_message(neighbors, out_sockets, routing, route):
         return
 
     conn_index = int(conn.split(' ')[2])
-    chosen_socket = out_sockets[conn_index]
+
     neighbor = neighbors[conn_index].split(' ')
 
     print('Abrindo conexao com: {} {}'.format(neighbor[0], int(neighbor[1])))
     server_route = (neighbor[0], int(neighbor[1]))
-    chosen_socket.connect(server_route)
+    connecting = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connecting.connect(server_route)
     try:
         print('Entre com a mensagem que deseja enviar')
         message = input()
         print('Enviando {}'.format(message))
-        send_message(chosen_socket, message)
+        send_message(connecting, message)
 
     finally:
         print('Fechando conexao')
-        chosen_socket.close()
+        connecting.close()
 
 
 def send_message(socket, message):
