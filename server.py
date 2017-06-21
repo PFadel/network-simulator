@@ -25,7 +25,4 @@ with open(args.routing, 'r') as Routing_file:
     routing = Routing_file.read().split('\n')
 
 if validate.validate_args(neighbors, IPs, routing, args):
-    try:
-        main.main(neighbors, IPs, routing, port)
-    except Exception as e:
-        print("Erro inesperado: {}".format(str(e)))
+    main.main(neighbors, IPs, routing, port)

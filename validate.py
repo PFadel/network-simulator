@@ -23,7 +23,7 @@ def validate_args(neighbors, IPs, routing, args):
         if route_index > max_value_neig or route_index < 0:
             interface_error = True
 
-        if validate_mask(route_mask, check_class(route_class)):
+        if mask_has_errors(route_mask, check_class(route_class)):
             mask_error = True
 
     if max_value_IPs != max_value_neig or interface_error or mask_error:
@@ -39,7 +39,7 @@ def validate_args(neighbors, IPs, routing, args):
 
 
 # Valida a máscara da sub rede
-def validate_mask(address, classe):
+def mask_has_errors(address, classe):
     if classe == 'A':
         size = 1
     elif classe == 'B':
@@ -49,8 +49,8 @@ def validate_mask(address, classe):
     for j in range(0, size):
         add = address.split('.')[j]
         if add != '255' and add != '0':
-            return False
-    return True
+            return True
+    return False
 
 
 # Verifica a classe do endereço

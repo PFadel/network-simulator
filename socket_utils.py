@@ -6,51 +6,91 @@ HEADER_SIZE = 160
 MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
 
-def find_socket_to_use(neighbors, IPs, routing, route):
+def find_socket_to_use(routing, route):
+    diffs = []
+
+    all_routes = None
+
+    route = route.split('.')
+    route = binary_ip(route[0], 8) + binary_ip(route[1], 8) + binary_ip(route[2], 8) + binary_ip(route[3], 8)
+
     for req in routing:
-        if req.startswith(route):
-            print("Rota escolhida: {}".format(req))
-            next_jump = int(req.split(' ')[2])
-            return neighbors[next_jump].split(' ')
+        req = req.split(' ')[0].split('.')
+        req = binary_ip(req[0], 8) + binary_ip(req[1], 8) + binary_ip(req[2], 8) + binary_ip(req[3], 8)
+
+        if req == binary_ip('0', 32):
+            all_routes = req
+
+        for i, c in enumerate(route):
+            if req[i] != c:
+                diffs.append(i)
+                break
+            if len(route) - 1 == i:
+                diffs.append(i)
+
+    longest_prefix = diffs[0]
+    longest_prefix_index = 0
+
+    for i, di in enumerate(diffs):
+        if di > longest_prefix:
+            longest_prefix = di
+            longest_prefix_index = i
+
+    if longest_prefix == 0:
+        return all_routes
+    return routing[longest_prefix_index]
 
 
-def listen_socket(socket):
-    conn, addr = socket.accept()
-    print("Conexao recebida de: {}".format(str(addr)))
+def listen_socket(neighbors, socket, routing):
     while True:
-        data = conn.recv(1024).decode()
-        if not data:
-            break
-        print("Dados recebidos: {}".format(readIPV4(data)))
+        conn, addr = socket.accept()
+        print("Conexao recebida de: {}".format(str(addr)))
+        while True:
+            data = conn.recv(1024).decode()
+            if not data:
+                break
+            dic = readIPV4(data)
+            if socket.getsockname()[0] == dic["destinationIpAddress"]:
+                print("Dados recebidos: {}".format(dic["payload"]))
+            else:
+                route_message(neighbors, routing, dic["destinationIpAddress"], data[HEADER_SIZE:])
+                break
 
 
-def route_message(neighbors, IPs, routing, route):
-    conn = find_socket_to_use(neighbors, IPs, routing, route)
+def route_message(neighbors, routing, route, message=None):
+    conn = find_socket_to_use(routing, route)
+
     if conn is None:
         print("Nenhuma rota encontrada para o destino, abortando envio")
         return
-    print('Abrindo conexao com: {} {}'.format(conn[0], int(conn[1])))
-    server_route = (conn[0], int(conn[1]))
+
+    conn_index = int(conn.split(' ')[2])
+
+    neighbor = neighbors[conn_index].split(' ')
+
+    print('Abrindo conexao com: {} {}'.format(neighbor[0], int(neighbor[1])))
+    server_route = (neighbor[0], int(neighbor[1]))
     connecting = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connecting.connect(server_route)
     try:
-        print('Entre com a mensagem que deseja enviar')
-        message = input()
+        if message is None:
+            print('Entre com a mensagem que deseja enviar')
+            message = input()
         print('Enviando {}'.format(message))
-        send_message(connecting, message)
+        send_message(connecting, route, message)
 
     finally:
         print('Fechando conexao')
         connecting.close()
 
 
-def send_message(socket, message):
-    for datagram in createIPV4(socket.getsockname()[0], message):
+def send_message(socket, destination, message):
+    for datagram in createIPV4(socket.getsockname()[0], destination, message):
         socket.sendall(bytearray(datagram, 'utf-8'))
 
 
 # Cria o cabeçalho IPV4
-def createIPV4(orig, payload):
+def createIPV4(orig, dest, payload):
     # ipv4 = 4
     version = binary_ip('4', 4)
     # 5 é o protocolo sem a parte de options
@@ -75,7 +115,11 @@ def createIPV4(orig, payload):
     sourceIpAddress = sourceIpAddress + binary_ip(aux[2], 8)
     sourceIpAddress = sourceIpAddress + binary_ip(aux[3], 8)
     # professor falou que só vamos utilizar na ultima versão
-    destinationIpAddress = binary_ip('0', 32)
+    aux = dest.split('.')
+    destinationIpAddress = binary_ip(aux[0], 8)
+    destinationIpAddress = destinationIpAddress + binary_ip(aux[1], 8)
+    destinationIpAddress = destinationIpAddress + binary_ip(aux[2], 8)
+    destinationIpAddress = destinationIpAddress + binary_ip(aux[3], 8)
 
     finish = False
     frag = 0
