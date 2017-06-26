@@ -5,6 +5,7 @@ MAX_DATAGRAM_BITS = 65535 * 8
 HEADER_SIZE = 160
 MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
+
 # Identifica o socket a ser usado no roteamento
 def find_socket_to_use(routing, route):
     diffs = []
@@ -40,7 +41,8 @@ def find_socket_to_use(routing, route):
         return all_routes
     return routing[longest_prefix_index]
 
-#Recebe o datagrama, verificando se estamos no destino ou se precisamos reenviar o datagrama
+
+# Recebe o datagrama, verificando se estamos no destino ou se precisamos reenviar o datagrama
 def listen_socket(neighbors, socket, routing):
     while True:
         conn, addr = socket.accept()
@@ -56,6 +58,7 @@ def listen_socket(neighbors, socket, routing):
                 route_message(neighbors, routing, dic["destinationIpAddress"], data[HEADER_SIZE:], dic["timeToLive"])
                 break
 
+
 # Envia a mensagem para o vizinho correto baseado em sua tabela de roteamento
 def route_message(neighbors, routing, route, message=None, ttl=7):
     conn = find_socket_to_use(routing, route)
@@ -63,7 +66,7 @@ def route_message(neighbors, routing, route, message=None, ttl=7):
     if conn is None:
         print("Nenhuma rota encontrada para o destino, abortando envio")
         return
-    if ttl = 0:
+    if ttl == 0:
         print("Número de saltos chegou ao limite, abortando envio")
         return
     conn_index = int(conn.split(' ')[2])
@@ -85,6 +88,7 @@ def route_message(neighbors, routing, route, message=None, ttl=7):
         print('Fechando conexao')
         connecting.close()
 
+
 # Encaminha a mensagem para o seu destino
 def send_message(socket, destination, message):
     for datagram in createIPV4(socket.getsockname()[0], destination, message):
@@ -103,7 +107,7 @@ def createIPV4(orig, dest, payload, ttl):
     flags = binary_ip('0', 3)
     # requerido pelo professor
     fragmentOffset = binary_ip('0', 13)
-    timeToLive = binary_ip(ttl-1, 8)
+    timeToLive = binary_ip(ttl - 1, 8)
     # tcp = bin(6. Professor requeriu 0)
     protocol = binary_ip('6', 8)
     # requerido pelo professor
@@ -147,6 +151,7 @@ def createIPV4(orig, dest, payload, ttl):
         frag += 1
 
     return resp_list
+
 
 # Realiza a decodificação do cabeçalho IPV4, retornando um dicionário.
 def readIPV4(datagram):

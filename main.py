@@ -4,9 +4,7 @@ import _thread
 
 
 def main(neighbors, IPs, routing, port):
-    max_value = len(routing) - 1
-    
-    #Cria os sockets e realiza os devidos binds.
+    # Cria os sockets e realiza os devidos binds.
     out_sockets = []
     for i in IPs:
         listening = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -17,7 +15,7 @@ def main(neighbors, IPs, routing, port):
         _thread.start_new_thread(socket_utils.listen_socket,
                                  tuple([neighbors, listening, routing]))
         out_sockets.append(listening)
-    #Menu principal
+    # Menu principal
     while True:
         option = ''
         print('Digite 1 para enviar mensagem ou 2 para sair.')
@@ -32,5 +30,5 @@ def main(neighbors, IPs, routing, port):
             port = input()
             socket_utils.route_message(neighbors, routing, destination)
         elif option == 2:
-            break   
+            break
     print('Execucao terminada')
