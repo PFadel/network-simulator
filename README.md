@@ -24,6 +24,7 @@ Socket_utils é a responsável por realmente implementar o simulador. É nessa c
 
 Problema do Roteamento:
 
+![alt text](./routing.jpeg)
 
 
 
