@@ -2,7 +2,7 @@ import argparse
 import validate
 import main
 
-# Parameters
+# Define os parâmetros
 parser = argparse.ArgumentParser()
 parser.add_argument("-p", "--port", help="Porta desejada da aplicacao",
                     type=int)
@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 port = args.port if args.port is not None else 10000
 
-# Open documents
+# Abre arquivos
 with open(args.neighbors, 'r') as neighbors_file:
     neighbors = neighbors_file.read().split('\n')
 
@@ -23,6 +23,6 @@ with open(args.IPs, 'r') as IPs_file:
 
 with open(args.routing, 'r') as Routing_file:
     routing = Routing_file.read().split('\n')
-
+# Realiza validações necessárias
 if validate.validate_args(neighbors, IPs, routing, args):
     main.main(neighbors, IPs, routing, port)

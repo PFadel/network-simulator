@@ -1,5 +1,5 @@
 
-
+# Realiza a validacao dos arquivos
 def validate_args(neighbors, IPs, routing, args):
     interface_error = False
     mask_error = False
@@ -25,7 +25,7 @@ def validate_args(neighbors, IPs, routing, args):
 
         if mask_has_errors(route_mask, check_class(route_class)):
             mask_error = True
-
+    #Se quantidade de IPs é diferente da quantidade de vizinhos, não existe indice da interface ou possui uma máscara invalida, retorna erro.
     if max_value_IPs != max_value_neig or interface_error or mask_error:
         if interface_error:
             print("Indice da interface nao existe.")
@@ -38,7 +38,7 @@ def validate_args(neighbors, IPs, routing, args):
     return True
 
 
-# Valida a máscara da sub rede
+# Valida a máscara da sub rede utilizando classes
 def mask_has_errors(address, classe):
     if classe == 'A':
         size = 1

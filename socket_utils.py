@@ -5,7 +5,7 @@ MAX_DATAGRAM_BITS = 65535 * 8
 HEADER_SIZE = 160
 MAX_PAYLOAD = MAX_DATAGRAM_BITS - HEADER_SIZE
 
-
+# Identifica o socket a ser usado no roteamento
 def find_socket_to_use(routing, route):
     diffs = []
 
@@ -40,7 +40,7 @@ def find_socket_to_use(routing, route):
         return all_routes
     return routing[longest_prefix_index]
 
-
+#Recebe o datagrama, verificando se estamos no destino ou se precisamos reenviar o datagrama
 def listen_socket(neighbors, socket, routing):
     while True:
         conn, addr = socket.accept()
@@ -53,17 +53,19 @@ def listen_socket(neighbors, socket, routing):
             if socket.getsockname()[0] == dic["destinationIpAddress"]:
                 print("Dados recebidos: {}".format(dic["payload"]))
             else:
-                route_message(neighbors, routing, dic["destinationIpAddress"], data[HEADER_SIZE:])
+                route_message(neighbors, routing, dic["destinationIpAddress"], data[HEADER_SIZE:], dic["timeToLive"])
                 break
 
-
-def route_message(neighbors, routing, route, message=None):
+# Envia a mensagem para o vizinho correto baseado em sua tabela de roteamento
+def route_message(neighbors, routing, route, message=None, ttl=7):
     conn = find_socket_to_use(routing, route)
 
     if conn is None:
         print("Nenhuma rota encontrada para o destino, abortando envio")
         return
-
+    if ttl = 0:
+        print("Número de saltos chegou ao limite, abortando envio")
+        return
     conn_index = int(conn.split(' ')[2])
 
     neighbor = neighbors[conn_index].split(' ')
@@ -83,14 +85,14 @@ def route_message(neighbors, routing, route, message=None):
         print('Fechando conexao')
         connecting.close()
 
-
+# Encaminha a mensagem para o seu destino
 def send_message(socket, destination, message):
     for datagram in createIPV4(socket.getsockname()[0], destination, message):
         socket.sendall(bytearray(datagram, 'utf-8'))
 
 
 # Cria o cabeçalho IPV4
-def createIPV4(orig, dest, payload):
+def createIPV4(orig, dest, payload, ttl):
     # ipv4 = 4
     version = binary_ip('4', 4)
     # 5 é o protocolo sem a parte de options
@@ -101,8 +103,7 @@ def createIPV4(orig, dest, payload):
     flags = binary_ip('0', 3)
     # requerido pelo professor
     fragmentOffset = binary_ip('0', 13)
-    # requerido pelo professor
-    timeToLive = binary_ip('7', 8)
+    timeToLive = binary_ip(ttl-1, 8)
     # tcp = bin(6. Professor requeriu 0)
     protocol = binary_ip('6', 8)
     # requerido pelo professor
@@ -114,7 +115,7 @@ def createIPV4(orig, dest, payload):
     sourceIpAddress = sourceIpAddress + binary_ip(aux[1], 8)
     sourceIpAddress = sourceIpAddress + binary_ip(aux[2], 8)
     sourceIpAddress = sourceIpAddress + binary_ip(aux[3], 8)
-    # professor falou que só vamos utilizar na ultima versão
+    # transforma cada parte do IP de destino em binario
     aux = dest.split('.')
     destinationIpAddress = binary_ip(aux[0], 8)
     destinationIpAddress = destinationIpAddress + binary_ip(aux[1], 8)
@@ -147,7 +148,7 @@ def createIPV4(orig, dest, payload):
 
     return resp_list
 
-
+# Realiza a decodificação do cabeçalho IPV4, retornando um dicionário.
 def readIPV4(datagram):
     version = int(datagram[:4], 2)
 
