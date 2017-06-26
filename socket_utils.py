@@ -60,7 +60,7 @@ def listen_socket(neighbors, socket, routing):
 
 
 # Envia a mensagem para o vizinho correto baseado em sua tabela de roteamento
-def route_message(neighbors, routing, route, message=None, ttl=7):
+def route_message(neighbors, routing, route, message=None, ttl='7'):
     conn = find_socket_to_use(routing, route)
 
     if conn is None:
@@ -82,7 +82,7 @@ def route_message(neighbors, routing, route, message=None, ttl=7):
             print('Entre com a mensagem que deseja enviar')
             message = input()
         print('Enviando {}'.format(message))
-        send_message(connecting, route, message)
+        send_message(connecting, route, message, ttl)
 
     finally:
         print('Fechando conexao')
@@ -90,8 +90,8 @@ def route_message(neighbors, routing, route, message=None, ttl=7):
 
 
 # Encaminha a mensagem para o seu destino
-def send_message(socket, destination, message):
-    for datagram in createIPV4(socket.getsockname()[0], destination, message):
+def send_message(socket, destination, message, ttl):
+    for datagram in createIPV4(socket.getsockname()[0], destination, message, ttl):
         socket.sendall(bytearray(datagram, 'utf-8'))
 
 
@@ -101,16 +101,17 @@ def createIPV4(orig, dest, payload, ttl):
     version = binary_ip('4', 4)
     # 5 é o protocolo sem a parte de options
     ihl = binary_ip('5', 4)
-    # requerido pelo professor
+
     typeOfService = binary_ip('0', 8)
-    # requerido pelo professor
+
     flags = binary_ip('0', 3)
-    # requerido pelo professor
+
     fragmentOffset = binary_ip('0', 13)
-    timeToLive = binary_ip(ttl - 1, 8)
-    # tcp = bin(6. Professor requeriu 0)
+
+    timeToLive = binary_ip(str(int(ttl) - 1), 8)
+
     protocol = binary_ip('6', 8)
-    # requerido pelo professor
+
     headerChecksum = binary_ip('0', 16)
 
     # transforma cada parte do IP de origem em binario
