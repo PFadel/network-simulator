@@ -15,12 +15,22 @@ Pedro Fadel
 
 Introdução:
 O programa simulador apresentado foi desenvolvido em Python 3.6.0, utilizando bibliotecas como socket, sys e _threads. Para compilar o código, precisamos primeiramente configurar o computador onde será executado, para que ele possua as interfaces virtuais que serão utilizadas abertas. Para isso, utilizamos o NETCTL do Linux.
+
+
 Configuração:
-O projeto está separado em 4 arquivos, sendo elas main, server, socket_utils e validate.
-A main trata da comunicação entre o simulador e o usuário, contendo o menu principal e abrindo as threads necessárias para receber dados de outras instâncias do simulador.
-O server é o arquivo principal do simulador, responsável por abrir os arquivos, chamar as funções de validação definidas no arquiv validate e chamar a main, passando os argumentos recebidos pelo usuário para esta, caso as validações estejam corretas.
-Validate é o arquivo onde se encontram as verificações de integridade do sistema, como verificação de tamanho de arquivo e validação de máscaras.
-Socket_utils é a responsável por realmente implementar o simulador. É nessa classe que estão as funções de criação e leitura do cabeçalho IPV4, roteamento, recebimento e leitura da mensagem.
+O projeto está separado em 4 arquivos, sendo elas **main**, **server**, **socket_utils** e **validate**.
+
+
+A **main** trata da comunicação entre o simulador e o usuário, contendo o menu principal e abrindo as threads necessárias para receber dados de outras instâncias do simulador.
+
+
+O **server** é o arquivo principal do simulador, responsável por abrir os arquivos, chamar as funções de validação definidas no arquivo **validate** e chamar a **main**, passando os argumentos recebidos pelo usuário para esta, caso as validações estejam corretas.
+
+
+**Validate** é o arquivo onde se encontram as verificações de integridade do sistema, como verificação de tamanho de arquivo e validação de máscaras.
+
+
+**Socket_utils** é a responsável por realmente implementar o simulador. É nesse arquivo que estão as funções de criação e leitura do cabeçalho IPV4, roteamento, recebimento e leitura da mensagem.
 
 Problema do Roteamento:
 
